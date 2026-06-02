@@ -2,113 +2,123 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Shipping Live Board</title>
+<title>Warehouse Command Center</title>
 
 <style>
 body {
   font-family: Arial;
   background: #111;
   color: white;
-  margin: 0;
 }
 
 h1 {
   text-align: center;
-  padding: 10px;
   background: #0078D4;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
   padding: 10px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.door {
+  width: 24%;
+  margin: 5px;
+  background: #222;
+  padding: 10px;
+}
+
+.door h2 {
+  background: #444;
   text-align: center;
-  border-bottom: 1px solid #444;
 }
 
-th {
-  background: #333;
+.load {
+  padding: 8px;
+  margin: 5px 0;
 }
 
-.late { background: #ff4d4d; }
-.upcoming { background: #ffd966; color: black; }
-.complete { background: #2ecc71; }
-
-.missing { border: 2px solid red; }
+.late { background:red; }
+.upcoming { background:orange; }
+.complete { background:green; }
 
 input {
   width: 100%;
-  background: transparent;
   border: none;
+  background: transparent;
   color: white;
-  text-align: center;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📺 SHIPPING LIVE BOARD</h1>
+<h1>🚪 DOCK LIVE BOARD</h1>
 
-<table id="board">
-<thead>
-<tr>
-<th>Time</th>
-<th>Door</th>
-<th>Carrier</th>
-<th>Customer</th>
-<th>Trailer</th>
-<th>Status</th>
-<th>Priority</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><input type="time"></td>
-<td><input value="1"></td>
-<td><input value="K&B"></td>
-<td><input value="HORMEL"></td>
-<td><input class="missing"></td>
-<td><input value="Today"></td>
-<td><input value="Critical"></td>
-</tr>
-</tbody>
-</table>
+<div class="container" id="board"></div>
 
 <script>
-setInterval(() => {
-  let rows = document.querySelectorAll("tbody tr");
+let data = JSON.parse(localStorage.getItem("loads")) || [];
 
-  rows.forEach(row => {
-    let timeCell = row.cells[0].querySelector("input").value;
-    let status = row.cells[5].querySelector("input").value;
+function render() {
+  let container = document.getElementById("board");
+  container.innerHTML = "";
 
-    if (!timeCell) return;
+  for (let d = 1; d <= 10; d++) {
+    let doorDiv = document.createElement("div");
+    doorDiv.className = "door";
+    doorDiv.innerHTML = `<h2>DOOR ${d}</h2>`;
 
-    let now = new Date();
-    let loadTime = new Date();
-    let [h, m] = timeCell.split(":");
+    let loads = data.filter(x => x.door == d);
 
-    loadTime.setHours(h);
-    loadTime.setMinutes(m);
+    loads.forEach(load => {
+      let div = document.createElement("div");
+      div.className = "load";
 
-    let diff = (loadTime - now) / 60000;
+      let now = new Date();
+      let loadTime = new Date();
+      let [h,m] = load.time.split(":");
+      loadTime.setHours(h,m);
 
-    row.classList.remove("late","upcoming","complete");
+      let diff = (loadTime - now)/60000;
 
-    if (status === "Completed") {
-      row.classList.add("complete");
-    } else if (diff < 0) {
-      row.classList.add("late");
-    } else if (diff <= 60) {
-      row.classList.add("upcoming");
-    }
+      if(load.status==="Completed") div.classList.add("complete");
+      else if(diff < 0) div.classList.add("late");
+      else if(diff <= 60) div.classList.add("upcoming");
+
+      div.innerHTML = `
+        <input value="${load.time}">
+        ${load.carrier}<br>
+        ${load.customer}<br>
+        Trailer: ${load.trailer || "MISSING"}
+        <br>Status: ${load.status}
+      `;
+      doorDiv.appendChild(div);
+    });
+
+    container.appendChild(doorDiv);
+  }
+}
+
+function addLoad() {
+  data.push({
+    door: 1,
+    time: "14:00",
+    carrier: "K&B",
+    customer: "HORMEL",
+    trailer: "",
+    status: "Today"
   });
-}, 5000);
+  localStorage.setItem("loads", JSON.stringify(data));
+  render();
+}
+
+render();
+setInterval(render, 5000);
 </script>
+
+<button onclick="addLoad()">Add Load</button>
 
 </body>
 </html>
