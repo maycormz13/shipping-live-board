@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Shipping Live Board</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  margin: 0;
+}
+
+h1 {
+  text-align: center;
+  padding: 10px;
+  background: #0078D4;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid #444;
+}
+
+th {
+  background: #333;
+}
+
+.late { background: #ff4d4d; }
+.upcoming { background: #ffd966; color: black; }
+.complete { background: #2ecc71; }
+
+.missing { border: 2px solid red; }
+
+input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: white;
+  text-align: center;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📺 SHIPPING LIVE BOARD</h1>
+
+<table id="board">
+<thead>
+<tr>
+<th>Time</th>
+<th>Door</th>
+<th>Carrier</th>
+<th>Customer</th>
+<th>Trailer</th>
+<th>Status</th>
+<th>Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><input type="time"></td>
+<td><input value="1"></td>
+<td><input value="K&B"></td>
+<td><input value="HORMEL"></td>
+<td><input class="missing"></td>
+<td><input value="Today"></td>
+<td><input value="Critical"></td>
+</tr>
+</tbody>
+</table>
+
+<script>
+setInterval(() => {
+  let rows = document.querySelectorAll("tbody tr");
+
+  rows.forEach(row => {
+    let timeCell = row.cells[0].querySelector("input").value;
+    let status = row.cells[5].querySelector("input").value;
+
+    if (!timeCell) return;
+
+    let now = new Date();
+    let loadTime = new Date();
+    let [h, m] = timeCell.split(":");
+
+    loadTime.setHours(h);
+    loadTime.setMinutes(m);
+
+    let diff = (loadTime - now) / 60000;
+
+    row.classList.remove("late","upcoming","complete");
+
+    if (status === "Completed") {
+      row.classList.add("complete");
+    } else if (diff < 0) {
+      row.classList.add("late");
+    } else if (diff <= 60) {
+      row.classList.add("upcoming");
+    }
+  });
+}, 5000);
+</script>
+
+</body>
+</html>
