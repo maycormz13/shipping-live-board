@@ -1,124 +1,1452 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Warehouse Command Center</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integrated Load Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-body {
-  font-family: Arial;
-  background: #111;
-  color: white;
-}
-
-h1 {
-  text-align: center;
-  background: #0078D4;
-  padding: 10px;
-}
-
-.container {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.door {
-  width: 24%;
-  margin: 5px;
-  background: #222;
-  padding: 10px;
-}
-
-.door h2 {
-  background: #444;
-  text-align: center;
-}
-
-.load {
-  padding: 8px;
-  margin: 5px 0;
-}
-
-.late { background:red; }
-.upcoming { background:orange; }
-.complete { background:green; }
-
-input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: white;
-}
+  :root {
+    --bg: #090c12;
+    --surface: #0e1420;
+    --surface2: #131a27;
+    --border: #1e2d45;
+    --border-bright: #2a4060;
+    --accent: #00c8ff;
+    --accent2: #0085b3;
+    --text: #c8dff0;
+    --text-dim: #5a7a99;
+    --text-bright: #eaf4ff;
+    --late: #ff3b3b;
+    --late-bg: rgba(255,59,59,0.12);
+    --upcoming: #f5c518;
+    --upcoming-bg: rgba(245,197,24,0.10);
+    --complete: #22e07a;
+    --complete-bg: rgba(34,224,122,0.10);
+    --high: #ff7030;
+    --high-bg: rgba(255,112,48,0.12);
+    --on-time: #00c8ff;
+    --on-time-bg: rgba(0,200,255,0.08);
+    --grid-line: rgba(0,200,255,0.06);
+    --glow: 0 0 20px rgba(0,200,255,0.18);
+  }
+ 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    font-family: 'Exo 2', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+ 
+  /* ─── grid background ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+ 
+  /* ─── top bar ─── */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 60px;
+    background: linear-gradient(90deg, #0a1520 0%, #0e1d2e 100%);
+    border-bottom: 1px solid var(--border-bright);
+    box-shadow: 0 2px 30px rgba(0,200,255,0.08);
+  }
+ 
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    display: grid; place-items: center;
+    background: linear-gradient(135deg, #00c8ff22, #0085b322);
+    border: 1px solid var(--accent2);
+    border-radius: 6px;
+  }
+  .logo-icon svg { width: 18px; height: 18px; fill: var(--accent); }
+  .logo-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-bright);
+    text-transform: uppercase;
+  }
+  .logo-text span { color: var(--accent); }
+ 
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  #clock {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: var(--complete);
+    text-transform: uppercase;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--complete);
+    box-shadow: 0 0 8px var(--complete);
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+ 
+  /* ─── tabs ─── */
+  .tabs {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    gap: 0;
+    padding: 0 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 13px 22px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color .2s, border-color .2s;
+    user-select: none;
+    position: relative;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent2);
+    color: #fff;
+    font-size: 10px;
+    font-family: 'Exo 2', sans-serif;
+    margin-left: 6px;
+    font-weight: 700;
+  }
+ 
+  /* ─── panels ─── */
+  .panel { display: none; position: relative; z-index: 5; }
+  .panel.active { display: block; }
+ 
+  /* ─── toolbar ─── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 28px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all .15s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #00c8ff22, #0056a822);
+    border-color: var(--accent2);
+    color: var(--accent);
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #00c8ff35, #0056a835);
+    box-shadow: var(--glow);
+  }
+  .btn-danger {
+    background: rgba(255,59,59,0.08);
+    border-color: rgba(255,59,59,0.4);
+    color: var(--late);
+  }
+  .btn-danger:hover { background: rgba(255,59,59,0.15); }
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border-bright);
+    color: var(--text-dim);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent2); }
+ 
+  .search-wrap {
+    flex: 1;
+    max-width: 280px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    padding: 7px 12px 7px 34px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Exo 2', sans-serif;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-wrap input:focus { border-color: var(--accent2); }
+  .search-wrap svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px; height: 15px;
+    fill: var(--text-dim);
+    pointer-events: none;
+  }
+ 
+  .filter-select {
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Exo 2', sans-serif;
+    outline: none;
+    cursor: pointer;
+  }
+  .filter-select:focus { border-color: var(--accent2); }
+ 
+  /* ─── stats strip ─── */
+  .stats-strip {
+    display: flex;
+    gap: 1px;
+    padding: 0 28px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-card {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.late::before { background: var(--late); }
+  .stat-card.upcoming::before { background: var(--upcoming); }
+  .stat-card.complete::before { background: var(--complete); }
+  .stat-card.on-time::before { background: var(--on-time); }
+  .stat-card.total::before { background: var(--accent2); }
+  .stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .stat-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--text-bright);
+    line-height: 1;
+  }
+  .stat-card.late .stat-value { color: var(--late); }
+  .stat-card.upcoming .stat-value { color: var(--upcoming); }
+  .stat-card.complete .stat-value { color: var(--complete); }
+ 
+  /* ─── table ─── */
+  .table-wrap {
+    padding: 16px 28px 32px;
+    overflow-x: auto;
+  }
+ 
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+ 
+  thead th {
+    position: sticky;
+    top: 0;
+    padding: 10px 12px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border-bright);
+    white-space: nowrap;
+    user-select: none;
+    cursor: pointer;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child { border-radius: 0 8px 0 0; }
+ 
+  tbody tr {
+    cursor: pointer;
+    transition: background .12s;
+  }
+  tbody tr:hover td { background: rgba(0,200,255,0.04); }
+  tbody tr.selected td { background: rgba(0,200,255,0.08) !important; }
+ 
+  tbody td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
+    font-size: 13px;
+    background: var(--surface);
+    transition: background .12s;
+  }
+ 
+  /* row color coding */
+  tbody tr.row-late td { background: var(--late-bg); }
+  tbody tr.row-upcoming td { background: var(--upcoming-bg); }
+  tbody tr.row-complete td { background: var(--complete-bg); }
+ 
+  /* alert badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge-late { background: var(--late-bg); color: var(--late); border: 1px solid rgba(255,59,59,0.3); }
+  .badge-upcoming { background: var(--upcoming-bg); color: var(--upcoming); border: 1px solid rgba(245,197,24,0.3); }
+  .badge-complete { background: var(--complete-bg); color: var(--complete); border: 1px solid rgba(34,224,122,0.3); }
+  .badge-ontime { background: var(--on-time-bg); color: var(--on-time); border: 1px solid rgba(0,200,255,0.3); }
+  .badge-high { background: var(--high-bg); color: var(--high); border: 1px solid rgba(255,112,48,0.3); }
+ 
+  .badge-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+ 
+  /* priority labels */
+  .pri-high { color: var(--high); font-weight: 600; }
+  .pri-medium { color: var(--upcoming); font-weight: 600; }
+  .pri-low { color: var(--text-dim); }
+ 
+  /* editable cells */
+  td.editable { position: relative; }
+  td.editable:hover::after {
+    content: '✎';
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--accent2);
+    opacity: 0.7;
+  }
+ 
+  /* inline inputs */
+  td input, td select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--accent2);
+    border-radius: 4px;
+    color: var(--text-bright);
+    font-size: 13px;
+    font-family: 'Exo 2', sans-serif;
+    padding: 3px 7px;
+    outline: none;
+  }
+ 
+  /* ─── modal ─── */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,10,20,0.85);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+ 
+  .modal {
+    width: 860px;
+    max-width: 95vw;
+    max-height: 90vh;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.7), 0 0 40px rgba(0,200,255,0.08);
+    overflow: hidden;
+  }
+ 
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-bright);
+  }
+  .modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text-bright);
+    text-transform: uppercase;
+  }
+  .modal-close {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all .15s;
+  }
+  .modal-close:hover { border-color: var(--late); color: var(--late); }
+ 
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+ 
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+ 
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-group.span2 { grid-column: span 2; }
+  .form-group.span3 { grid-column: span 3; }
+ 
+  label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+ 
+  .form-input {
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-bright);
+    font-size: 13px;
+    font-family: 'Exo 2', sans-serif;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,200,255,0.1); }
+ 
+  .modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+ 
+  /* ─── live board ─── */
+  .liveboard-header {
+    padding: 20px 28px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .liveboard-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-bright);
+  }
+  .liveboard-title span { color: var(--accent); }
+ 
+  .live-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    padding: 4px 28px 32px;
+  }
+ 
+  .live-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .live-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  .live-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .live-card.card-late::before { background: var(--late); }
+  .live-card.card-upcoming::before { background: var(--upcoming); }
+  .live-card.card-complete::before { background: linear-gradient(90deg, var(--complete), #00c8ff); }
+  .live-card.card-ontime::before { background: var(--accent); }
+ 
+  .live-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .live-door {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 32px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .live-door-label {
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .live-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    color: var(--text-bright);
+    text-align: right;
+  }
+  .live-customer {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  .live-carrier {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .live-card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .live-trailer {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+ 
+  /* ─── door board ─── */
+  .door-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 16px 28px 32px;
+  }
+ 
+  .door-slot {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+    min-height: 120px;
+    transition: box-shadow .15s;
+  }
+  .door-slot.occupied { border-color: var(--border-bright); }
+  .door-slot.occupied:hover { box-shadow: 0 0 20px rgba(0,200,255,0.1); }
+ 
+  .door-number {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .door-number span {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 24px;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+  }
+  .door-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 60px;
+    gap: 6px;
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.4;
+  }
+ 
+  /* ─── empty state ─── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .empty-state svg { width: 40px; height: 40px; fill: var(--border-bright); }
+  .empty-state p { font-size: 14px; letter-spacing: 1px; }
+ 
+  /* ─── context menu ─── */
+  .ctx-menu {
+    display: none;
+    position: fixed;
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    z-index: 200;
+    min-width: 160px;
+    overflow: hidden;
+  }
+  .ctx-menu.open { display: block; }
+  .ctx-item {
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    transition: background .1s;
+  }
+  .ctx-item:hover { background: rgba(0,200,255,0.08); color: var(--accent); }
+  .ctx-item.danger { color: var(--late); }
+  .ctx-item.danger:hover { background: var(--late-bg); }
+  .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
+ 
+  /* ─── scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent2); }
+ 
+  /* ─── toast ─── */
+  .toast-wrap {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-bright);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: slide-in .2s ease;
+  }
+  .toast.success { border-left: 3px solid var(--complete); }
+  .toast.error { border-left: 3px solid var(--late); }
+  @keyframes slide-in { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+ 
+  /* ─── tooltip ─── */
+  [data-tip] { position: relative; }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 50;
+  }
+ 
+  .sort-arrow { margin-left: 4px; opacity: 0.5; }
+ 
+  /* ─── responsive ─── */
+  @media (max-width: 700px) {
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .form-group.span3 { grid-column: span 2; }
+    .stats-strip { flex-wrap: wrap; }
+    .stat-card { min-width: 120px; }
+    header { padding: 0 14px; }
+    .toolbar, .table-wrap, .live-grid, .door-grid, .liveboard-header { padding-left: 14px; padding-right: 14px; }
+    .tabs { padding: 0 14px; }
+  }
 </style>
 </head>
-
 <body>
-
-<h1>🚪 DOCK LIVE BOARD</h1>
-
-<div class="container" id="board"></div>
-
+ 
+<!-- ─── HEADER ─── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zm0 6h18v4H3zm0 6h18v4H3z"/></svg>
+    </div>
+    <div class="logo-text">ILS &mdash; <span>Integrated Load System</span></div>
+  </div>
+  <div class="header-right">
+    <div id="clock"></div>
+    <div class="status-badge"><div class="status-dot"></div>System Live</div>
+  </div>
+</header>
+ 
+<!-- ─── TABS ─── -->
+<div class="tabs">
+  <div class="tab active" data-tab="tracker">Load Tracker <span class="tab-count" id="tc-count">0</span></div>
+  <div class="tab" data-tab="liveboard">Live Board</div>
+  <div class="tab" data-tab="doorboard">Door Board</div>
+</div>
+ 
+<!-- ═══════════════════ LOAD TRACKER ═══════════════════ -->
+<div class="panel active" id="panel-tracker">
+ 
+  <!-- stats -->
+  <div class="stats-strip" style="padding-top:14px;">
+    <div class="stat-card total">
+      <div class="stat-label">Total Loads</div>
+      <div class="stat-value" id="stat-total">0</div>
+    </div>
+    <div class="stat-card late">
+      <div class="stat-label">Late</div>
+      <div class="stat-value" id="stat-late">0</div>
+    </div>
+    <div class="stat-card upcoming">
+      <div class="stat-label">Upcoming</div>
+      <div class="stat-value" id="stat-upcoming">0</div>
+    </div>
+    <div class="stat-card on-time">
+      <div class="stat-label">On Time</div>
+      <div class="stat-value" id="stat-ontime">0</div>
+    </div>
+    <div class="stat-card complete">
+      <div class="stat-label">Complete</div>
+      <div class="stat-value" id="stat-complete">0</div>
+    </div>
+  </div>
+ 
+  <!-- toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="openModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/></svg>
+      Add Load
+    </button>
+    <button class="btn btn-ghost" onclick="exportCSV()" data-tip="Export to CSV">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 9v2H5v-2H3v4h18v-4h-2v2H11zm0 0"/></svg>
+      Export
+    </button>
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" id="search-input" placeholder="Search loads..." oninput="renderTable()">
+    </div>
+    <select class="filter-select" id="filter-alert" onchange="renderTable()">
+      <option value="">All Alerts</option>
+      <option value="LATE">Late</option>
+      <option value="UPCOMING">Upcoming</option>
+      <option value="ON TIME">On Time</option>
+      <option value="COMPLETE">Complete</option>
+    </select>
+    <select class="filter-select" id="filter-priority" onchange="renderTable()">
+      <option value="">All Priorities</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+  </div>
+ 
+  <!-- table -->
+  <div class="table-wrap">
+    <table id="load-table">
+      <thead>
+        <tr>
+          <th onclick="sortBy('shipDate')">Ship Date <span class="sort-arrow">▾</span></th>
+          <th onclick="sortBy('trip')">Trip#</th>
+          <th onclick="sortBy('order')">Order#</th>
+          <th onclick="sortBy('po')">PO#</th>
+          <th onclick="sortBy('carrier')">Carrier</th>
+          <th onclick="sortBy('cpuCheckIn')">CPU Check In</th>
+          <th onclick="sortBy('phone')">Phone</th>
+          <th onclick="sortBy('customer')">Customer</th>
+          <th onclick="sortBy('qty')">QTY</th>
+          <th onclick="sortBy('gateDate')">Gate Date</th>
+          <th onclick="sortBy('gateTime')">Gate Time</th>
+          <th onclick="sortBy('door')">Door</th>
+          <th onclick="sortBy('setTemp')">Set Temp</th>
+          <th onclick="sortBy('trailer')">Trailer</th>
+          <th onclick="sortBy('loader')">Loader/PA</th>
+          <th onclick="sortBy('transNotes')">Trans. Notes</th>
+          <th onclick="sortBy('guardNotes')">Guard Notes</th>
+          <th onclick="sortBy('shipNotes')">Ship Notes</th>
+          <th onclick="sortBy('status')">Status</th>
+          <th onclick="sortBy('priority')">Priority</th>
+          <th onclick="sortBy('alert')">Alert</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div id="empty-tracker" class="empty-state" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zm0 11H4V9h16v9zM6 4h12v2H6z"/></svg>
+      <p>No loads found. Add a load to get started.</p>
+    </div>
+  </div>
+</div>
+ 
+<!-- ═══════════════════ LIVE BOARD ═══════════════════ -->
+<div class="panel" id="panel-liveboard">
+  <div class="liveboard-header">
+    <div class="liveboard-title">Live <span>Shipping</span> Board</div>
+    <div id="clock2" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--accent);"></div>
+  </div>
+  <div class="live-grid" id="live-grid"></div>
+  <div id="empty-live" class="empty-state" style="display:none">
+    <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+    <p>No active loads to display</p>
+  </div>
+</div>
+ 
+<!-- ═══════════════════ DOOR BOARD ═══════════════════ -->
+<div class="panel" id="panel-doorboard">
+  <div class="liveboard-header">
+    <div class="liveboard-title">Dock <span>Door</span> Board</div>
+  </div>
+  <div class="door-grid" id="door-grid"></div>
+</div>
+ 
+<!-- ─── ADD/EDIT MODAL ─── -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Load</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ship Date</label>
+          <input type="date" class="form-input" id="f-shipDate">
+        </div>
+        <div class="form-group">
+          <label>Trip #</label>
+          <input type="text" class="form-input" id="f-trip" placeholder="e.g. 636898">
+        </div>
+        <div class="form-group">
+          <label>Order #</label>
+          <input type="text" class="form-input" id="f-order" placeholder="e.g. 234014">
+        </div>
+        <div class="form-group">
+          <label>PO #</label>
+          <input type="text" class="form-input" id="f-po" placeholder="e.g. PON0371801">
+        </div>
+        <div class="form-group">
+          <label>Carrier</label>
+          <input type="text" class="form-input" id="f-carrier" placeholder="e.g. GRAND ISLAND">
+        </div>
+        <div class="form-group">
+          <label>CPU Check In</label>
+          <input type="time" class="form-input" id="f-cpuCheckIn">
+        </div>
+        <div class="form-group">
+          <label>Phone #</label>
+          <input type="text" class="form-input" id="f-phone" placeholder="555-000-0000">
+        </div>
+        <div class="form-group">
+          <label>Customer</label>
+          <input type="text" class="form-input" id="f-customer" placeholder="e.g. FRESHMARK">
+        </div>
+        <div class="form-group">
+          <label>QTY</label>
+          <input type="number" class="form-input" id="f-qty" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Gate Date</label>
+          <input type="date" class="form-input" id="f-gateDate">
+        </div>
+        <div class="form-group">
+          <label>Gate Time</label>
+          <input type="time" class="form-input" id="f-gateTime">
+        </div>
+        <div class="form-group">
+          <label>Door</label>
+          <input type="text" class="form-input" id="f-door" placeholder="e.g. 5">
+        </div>
+        <div class="form-group">
+          <label>Set Temp (°F)</label>
+          <input type="number" class="form-input" id="f-setTemp" placeholder="e.g. 28">
+        </div>
+        <div class="form-group">
+          <label>Trailer #</label>
+          <input type="text" class="form-input" id="f-trailer" placeholder="e.g. 1234">
+        </div>
+        <div class="form-group">
+          <label>Loader / PA</label>
+          <input type="text" class="form-input" id="f-loader" placeholder="e.g. AP">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select class="form-input" id="f-status">
+            <option value="">— Select —</option>
+            <option>Today</option>
+            <option>Completed</option>
+            <option>Pending</option>
+            <option>In Progress</option>
+            <option>Delayed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select class="form-input" id="f-priority">
+            <option value="">— Select —</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+          </select>
+        </div>
+        <div class="form-group span3">
+          <label>Transportation Notes</label>
+          <input type="text" class="form-input" id="f-transNotes" placeholder="e.g. On time">
+        </div>
+        <div class="form-group span2">
+          <label>Guard Notes</label>
+          <input type="text" class="form-input" id="f-guardNotes" placeholder="e.g. Checked">
+        </div>
+        <div class="form-group">
+          <label>Shipping Notes</label>
+          <input type="text" class="form-input" id="f-shipNotes" placeholder="e.g. Ready">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLoad()">Save Load</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- ─── CONTEXT MENU ─── -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" onclick="ctxEdit()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+    Edit Load
+  </div>
+  <div class="ctx-item" onclick="ctxDuplicate()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+    Duplicate
+  </div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm13-15h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+    Delete
+  </div>
+</div>
+ 
+<!-- ─── TOASTS ─── -->
+<div class="toast-wrap" id="toasts"></div>
+ 
 <script>
-let data = JSON.parse(localStorage.getItem("loads")) || [];
-
-function render() {
-  let container = document.getElementById("board");
-  container.innerHTML = "";
-
-  for (let d = 1; d <= 10; d++) {
-    let doorDiv = document.createElement("div");
-    doorDiv.className = "door";
-    doorDiv.innerHTML = `<h2>DOOR ${d}</h2>`;
-
-    let loads = data.filter(x => x.door == d);
-
-    loads.forEach(load => {
-      let div = document.createElement("div");
-      div.className = "load";
-
-      let now = new Date();
-      let loadTime = new Date();
-      let [h,m] = load.time.split(":");
-      loadTime.setHours(h,m);
-
-      let diff = (loadTime - now)/60000;
-
-      if(load.status==="Completed") div.classList.add("complete");
-      else if(diff < 0) div.classList.add("late");
-      else if(diff <= 60) div.classList.add("upcoming");
-
-      div.innerHTML = `
-        <input value="${load.time}">
-        ${load.carrier}<br>
-        ${load.customer}<br>
-        Trailer: ${load.trailer || "MISSING"}
-        <br>Status: ${load.status}
-      `;
-      doorDiv.appendChild(div);
-    });
-
-    container.appendChild(doorDiv);
-  }
+// ════════════════════════════════════════
+//  DATA LAYER
+// ════════════════════════════════════════
+const STORE_KEY = 'ILS_LOADS_v2';
+ 
+let loads = [];
+let editingId = null;
+let ctxTargetId = null;
+let sortField = 'gateDate';
+let sortDir = 1;
+ 
+function load() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) { loads = JSON.parse(raw); return; }
+  } catch(e) {}
+  // seed with the sample row from the workbook
+  loads = [{
+    id: uid(),
+    shipDate: '2026-06-02',
+    trip: '636898',
+    order: '234014',
+    po: 'PON0371801',
+    carrier: 'GRAND ISLAND',
+    cpuCheckIn: '',
+    phone: '',
+    customer: 'FRESHMARK',
+    qty: 21,
+    gateDate: '2026-06-02',
+    gateTime: '14:00',
+    door: '5',
+    setTemp: 28,
+    trailer: '1234',
+    loader: 'AP',
+    transNotes: 'On time',
+    guardNotes: 'Checked',
+    shipNotes: 'Ready',
+    status: 'Today',
+    priority: 'High'
+  }];
+  save();
 }
-
-function addLoad() {
-  data.push({
-    door: 1,
-    time: "14:00",
-    carrier: "K&B",
-    customer: "HORMEL",
-    trailer: "",
-    status: "Today"
-  });
-  localStorage.setItem("loads", JSON.stringify(data));
+ 
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(loads)); } catch(e) {}
   render();
 }
-
+ 
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+ 
+// ════════════════════════════════════════
+//  ALERT LOGIC  (mirrors Excel formula)
+// ════════════════════════════════════════
+function calcAlert(row) {
+  if (row.status === 'Completed') return 'COMPLETE';
+  const gateDateTime = parseGate(row.gateDate, row.gateTime);
+  if (!gateDateTime) return '';
+  const diffMin = (gateDateTime - Date.now()) / 60000;
+  if (diffMin < 0) return 'LATE';
+  if (diffMin <= 60) return 'UPCOMING';
+  return 'ON TIME';
+}
+ 
+function parseGate(d, t) {
+  if (!d || !t) return null;
+  const ds = d.replace(/\//g, '-');
+  return new Date(ds + 'T' + t + ':00');
+}
+ 
+function timeDiff(row) {
+  const g = parseGate(row.gateDate, row.gateTime);
+  if (!g) return null;
+  return Math.round((g - Date.now()) / 60000);
+}
+ 
+// ════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════
+function render() {
+  renderTable();
+  renderLiveBoard();
+  renderDoorBoard();
+  updateStats();
+  updateTabCount();
+}
+ 
+function filteredSorted() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  const alertF = document.getElementById('filter-alert')?.value || '';
+  const prioF = document.getElementById('filter-priority')?.value || '';
+ 
+  let rows = loads.map(r => ({ ...r, _alert: calcAlert(r) }));
+ 
+  if (q) rows = rows.filter(r =>
+    [r.trip, r.order, r.po, r.carrier, r.customer, r.door, r.trailer, r.loader, r.transNotes, r.guardNotes, r.shipNotes, r.status, r.priority]
+      .some(v => String(v||'').toLowerCase().includes(q))
+  );
+  if (alertF) rows = rows.filter(r => r._alert === alertF);
+  if (prioF) rows = rows.filter(r => r.priority === prioF);
+ 
+  rows.sort((a, b) => {
+    let va = a[sortField] ?? '', vb = b[sortField] ?? '';
+    if (typeof va === 'number') return (va - vb) * sortDir;
+    return String(va).localeCompare(String(vb)) * sortDir;
+  });
+  return rows;
+}
+ 
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  const empty = document.getElementById('empty-tracker');
+  const rows = filteredSorted();
+ 
+  if (!rows.length) {
+    tbody.innerHTML = '';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+ 
+  tbody.innerHTML = rows.map(r => {
+    const alert = r._alert;
+    const rowCls = alert === 'LATE' ? 'row-late' : alert === 'UPCOMING' ? 'row-upcoming' : alert === 'COMPLETE' ? 'row-complete' : '';
+    const alertBadge = alertBadgeHtml(alert);
+    const prioCls = r.priority === 'High' ? 'pri-high' : r.priority === 'Medium' ? 'pri-medium' : 'pri-low';
+    const diff = timeDiff(r);
+    const diffStr = diff !== null ? (diff < 0 ? `<span style="color:var(--late)">${diff} min</span>` : `${diff} min`) : '—';
+ 
+    return `<tr class="${rowCls}" data-id="${r.id}" oncontextmenu="showCtx(event,'${r.id}')" ondblclick="editRow('${r.id}')">
+      <td>${r.shipDate || '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace">${r.trip || '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace">${r.order || '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace;font-size:11px">${r.po || '—'}</td>
+      <td>${r.carrier || '—'}</td>
+      <td>${r.cpuCheckIn || '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace;font-size:11px">${r.phone || '—'}</td>
+      <td style="font-weight:600;color:var(--text-bright)">${r.customer || '—'}</td>
+      <td style="text-align:center">${r.qty ?? '—'}</td>
+      <td>${r.gateDate || '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace;color:var(--accent)">${r.gateTime || '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--accent);text-align:center">${r.door || '—'}</td>
+      <td style="text-align:center">${r.setTemp ? r.setTemp + '°' : '—'}</td>
+      <td style="font-family:'Share Tech Mono',monospace">${r.trailer || '—'}</td>
+      <td>${r.loader || '—'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${r.transNotes || '—'}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.guardNotes || '—'}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.shipNotes || '—'}</td>
+      <td>${r.status || '—'}</td>
+      <td class="${prioCls}">${r.priority || '—'}</td>
+      <td>${alertBadge}</td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="editRow('${r.id}');event.stopPropagation()">Edit</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+ 
+function alertBadgeHtml(alert) {
+  if (!alert) return '—';
+  const map = {
+    'LATE': ['badge-late','●'],
+    'UPCOMING': ['badge-upcoming','◐'],
+    'ON TIME': ['badge-ontime','✓'],
+    'COMPLETE': ['badge-complete','✔'],
+  };
+  const [cls] = map[alert] || ['badge-ontime',''];
+  return `<span class="badge ${cls}"><span class="badge-dot"></span>${alert}</span>`;
+}
+ 
+function updateStats() {
+  const all = loads.map(r => calcAlert(r));
+  document.getElementById('stat-total').textContent = loads.length;
+  document.getElementById('stat-late').textContent = all.filter(a => a === 'LATE').length;
+  document.getElementById('stat-upcoming').textContent = all.filter(a => a === 'UPCOMING').length;
+  document.getElementById('stat-ontime').textContent = all.filter(a => a === 'ON TIME').length;
+  document.getElementById('stat-complete').textContent = all.filter(a => a === 'COMPLETE').length;
+}
+ 
+function updateTabCount() {
+  document.getElementById('tc-count').textContent = loads.length;
+}
+ 
+// ─── LIVE BOARD ───
+function renderLiveBoard() {
+  const grid = document.getElementById('live-grid');
+  const empty = document.getElementById('empty-live');
+  const rows = loads.map(r => ({ ...r, _alert: calcAlert(r) })).filter(r => r.gateTime);
+ 
+  if (!rows.length) { grid.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+ 
+  rows.sort((a, b) => (a.gateTime || '').localeCompare(b.gateTime || ''));
+ 
+  grid.innerHTML = rows.map(r => {
+    const cls = r._alert === 'LATE' ? 'card-late' : r._alert === 'UPCOMING' ? 'card-upcoming' : r._alert === 'COMPLETE' ? 'card-complete' : 'card-ontime';
+    const prioHtml = r.priority === 'High' ? alertBadgeHtml('HIGH') : '';
+    return `<div class="live-card ${cls}">
+      <div class="live-card-top">
+        <div>
+          <div class="live-door">${r.door || '?'}</div>
+          <div class="live-door-label">Door</div>
+        </div>
+        <div>
+          <div class="live-time">${r.gateTime || '—'}</div>
+          ${alertBadgeHtml(r._alert)}
+        </div>
+      </div>
+      <div class="live-customer">${r.customer || '—'}</div>
+      <div class="live-carrier">${r.carrier || '—'}</div>
+      <div class="live-card-bottom">
+        <div class="live-trailer">TRL ${r.trailer || '—'}</div>
+        ${r.priority === 'High' ? `<span class="badge badge-high"><span class="badge-dot"></span>HIGH</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+ 
+// ─── DOOR BOARD ───
+function renderDoorBoard() {
+  const grid = document.getElementById('door-grid');
+  const byDoor = {};
+  loads.forEach(r => {
+    if (r.door) byDoor[r.door] = (byDoor[r.door] || []).concat(r);
+  });
+ 
+  // show all occupied doors plus empty slots up to max
+  const occupied = Object.keys(byDoor).sort((a, b) => Number(a) - Number(b));
+  const maxDoor = Math.max(10, ...occupied.map(Number));
+  const slots = [];
+  for (let i = 1; i <= maxDoor; i++) slots.push(String(i));
+ 
+  grid.innerHTML = slots.map(d => {
+    const entries = byDoor[d];
+    if (!entries || !entries.length) {
+      return `<div class="door-slot">
+        <div class="door-number">Door<span>${d}</span></div>
+        <div class="door-empty"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="opacity:.4"><path d="M19 19H5V5h7V3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7h-2v7z"/></svg>OPEN</div>
+      </div>`;
+    }
+    return entries.map(r => {
+      const alert = calcAlert(r);
+      const badgeCls = alert === 'LATE' ? 'card-late' : alert === 'UPCOMING' ? 'card-upcoming' : alert === 'COMPLETE' ? 'card-complete' : 'card-ontime';
+      return `<div class="door-slot occupied ${badgeCls}" style="border-top:3px solid ${alert==='LATE'?'var(--late)':alert==='UPCOMING'?'var(--upcoming)':alert==='COMPLETE'?'var(--complete)':'var(--accent)'}">
+        <div class="door-number">Door<span>${d}</span></div>
+        <div style="font-size:14px;font-weight:600;color:var(--text-bright);margin-bottom:4px">${r.customer || '—'}</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px">${r.carrier || '—'}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--accent)">${r.gateTime || '—'}</span>
+          ${alertBadgeHtml(alert)}
+        </div>
+      </div>`;
+    }).join('');
+  }).join('');
+}
+ 
+// ════════════════════════════════════════
+//  SORT
+// ════════════════════════════════════════
+function sortBy(field) {
+  if (sortField === field) sortDir *= -1;
+  else { sortField = field; sortDir = 1; }
+  renderTable();
+}
+ 
+// ════════════════════════════════════════
+//  MODAL
+// ════════════════════════════════════════
+function openModal(id) {
+  editingId = id || null;
+  document.getElementById('modal-title').textContent = id ? 'Edit Load' : 'Add Load';
+  const fields = ['shipDate','trip','order','po','carrier','cpuCheckIn','phone','customer','qty','gateDate','gateTime','door','setTemp','trailer','loader','status','priority','transNotes','guardNotes','shipNotes'];
+ 
+  if (id) {
+    const r = loads.find(x => x.id === id);
+    if (r) fields.forEach(f => { const el = document.getElementById('f-'+f); if (el) el.value = r[f] ?? ''; });
+  } else {
+    fields.forEach(f => { const el = document.getElementById('f-'+f); if (el) el.value = ''; });
+    // default today
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('f-shipDate').value = today;
+    document.getElementById('f-gateDate').value = today;
+  }
+  document.getElementById('modal').classList.add('open');
+}
+ 
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  editingId = null;
+}
+ 
+function saveLoad() {
+  const fields = ['shipDate','trip','order','po','carrier','cpuCheckIn','phone','customer','qty','gateDate','gateTime','door','setTemp','trailer','loader','status','priority','transNotes','guardNotes','shipNotes'];
+  const data = {};
+  fields.forEach(f => { const el = document.getElementById('f-'+f); data[f] = el ? el.value : ''; });
+  data.qty = data.qty ? Number(data.qty) : null;
+  data.setTemp = data.setTemp ? Number(data.setTemp) : null;
+ 
+  if (!data.customer && !data.carrier) { toast('Please enter at least a customer or carrier.', 'error'); return; }
+ 
+  if (editingId) {
+    const idx = loads.findIndex(r => r.id === editingId);
+    if (idx > -1) loads[idx] = { ...loads[idx], ...data };
+    toast('Load updated.', 'success');
+  } else {
+    loads.push({ id: uid(), ...data });
+    toast('Load added.', 'success');
+  }
+  closeModal();
+  save();
+}
+ 
+function editRow(id) { openModal(id); }
+ 
+// ════════════════════════════════════════
+//  CONTEXT MENU
+// ════════════════════════════════════════
+function showCtx(e, id) {
+  e.preventDefault();
+  ctxTargetId = id;
+  const menu = document.getElementById('ctx-menu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('open');
+}
+function hideCtx() { document.getElementById('ctx-menu').classList.remove('open'); }
+function ctxEdit() { hideCtx(); editRow(ctxTargetId); }
+function ctxDuplicate() {
+  hideCtx();
+  const orig = loads.find(r => r.id === ctxTargetId);
+  if (orig) { loads.push({ ...orig, id: uid() }); save(); toast('Load duplicated.', 'success'); }
+}
+function ctxDelete() {
+  hideCtx();
+  loads = loads.filter(r => r.id !== ctxTargetId);
+  save(); toast('Load deleted.', 'error');
+}
+document.addEventListener('click', hideCtx);
+ 
+// ════════════════════════════════════════
+//  EXPORT
+// ════════════════════════════════════════
+function exportCSV() {
+  const headers = ['Ship Date','Trip#','Order#','PO#','Carrier','CPU Check In','Phone','Customer','QTY','Gate Date','Gate Time','Door','Set Temp','Trailer','Loader/PA','Trans Notes','Guard Notes','Ship Notes','Status','Priority','Alert'];
+  const rows = loads.map(r => {
+    const alert = calcAlert(r);
+    return [r.shipDate,r.trip,r.order,r.po,r.carrier,r.cpuCheckIn,r.phone,r.customer,r.qty,r.gateDate,r.gateTime,r.door,r.setTemp,r.trailer,r.loader,r.transNotes,r.guardNotes,r.shipNotes,r.status,r.priority,alert]
+      .map(v => `"${String(v??'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'loads_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('CSV exported.', 'success');
+}
+ 
+// ════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+ 
+// ════════════════════════════════════════
+//  CLOCK
+// ════════════════════════════════════════
+function tick() {
+  const now = new Date();
+  const str = now.toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const el = document.getElementById('clock');
+  const el2 = document.getElementById('clock2');
+  if (el) el.textContent = str;
+  if (el2) el2.textContent = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}) + '  ' + str;
+}
+ 
+// ════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════
+function toast(msg, type='success') {
+  const wrap = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = (type === 'success' ? '✓ ' : '⚠ ') + msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+ 
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+load();
 render();
-setInterval(render, 5000);
+tick();
+setInterval(tick, 1000);
+setInterval(render, 60000); // refresh alerts every minute
 </script>
-
-<button onclick="addLoad()">Add Load</button>
-
 </body>
 </html>
