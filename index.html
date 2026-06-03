@@ -705,7 +705,7 @@ function renderTable() {
   }).join('');
 }
 
-function esc(s) { return s.replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function alertBadgeHtml(alert) {
   if (!alert) return '—';
@@ -893,37 +893,84 @@ const COL_MAP = {
 };
 
 function normalizeHeader(h) {
-  return h.toLowerCase().replace(/[^a-z0-9 #\\/]/g,'').trim();
+  return h.toLowerCase().replace(/[^a-z0-9 #\/]/g,'').trim();
+}
+
+function splitDelimitedRows(text) {
+  text = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const rows = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    const next = text[i + 1];
+    if (c === '"') {
+      if (inQ && next === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === '\n' && !inQ) {
+      rows.push(cur);
+      cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  if (cur.trim() !== '' || text.endsWith('\n')) rows.push(cur);
+  return rows;
+}
+
+function splitDelimitedLine(line, delim) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    const next = line[i + 1];
+    if (c === '"') {
+      if (inQ && next === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === delim && !inQ) {
+      result.push(cur); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function detectDelimiterFromText(text) {
+  const sample = String(text || '').slice(0, 2000);
+  const tabCount = (sample.match(/\t/g) || []).length;
+  const commaCount = (sample.match(/,/g) || []).length;
+  return tabCount >= commaCount ? '\t' : ',';
 }
 
 function parseDelimited(text) {
-  const firstLine = text.split('\n')[0] || '';
-  const tabs = (firstLine.match(/\t/g)||[]).length;
-  const commas = (firstLine.match(/,/g)||[]).length;
-  const delim = tabs >= commas ? '\t' : ',';
-  const lines = text.split('\n').map(l => l.replace(/\r/g,''));
+  text = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const delim = detectDelimiterFromText(text);
+  const rows = splitDelimitedRows(text);
+  if (!rows.length) return [];
   let headerIdx = -1;
   let headers = [];
-  for (let i = 0; i < Math.min(lines.length, 5); i++) {
-    const cells = splitCSVLine(lines[i], delim);
+  for (let i = 0; i < Math.min(rows.length, 5); i++) {
+    const cells = splitDelimitedLine(rows[i], delim);
     const norm = cells.map(normalizeHeader);
     const matched = norm.filter(h => COL_MAP[h]).length;
     if (matched >= 2) { headerIdx = i; headers = norm; break; }
   }
   if (headerIdx === -1) {
     headerIdx = 0;
-    headers = splitCSVLine(lines[0], delim).map(normalizeHeader);
+    headers = splitDelimitedLine(rows[0], delim).map(normalizeHeader);
   }
-  const dataLines = lines.slice(headerIdx + 1);
   const parsed = [];
-  for (const line of dataLines) {
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const line = rows[i];
     if (!line.trim()) continue;
-    const cells = splitCSVLine(line, delim);
+    const cells = splitDelimitedLine(line, delim);
     if (cells.every(c => !c.trim())) continue;
     const row = {};
-    headers.forEach((h, i) => {
+    headers.forEach((h, idx) => {
       const field = COL_MAP[h];
-      if (field) row[field] = (cells[i] || '').trim();
+      if (field) row[field] = (cells[idx] || '').trim();
     });
     if (!row.customer && !row.carrier && !row.trip) continue;
     if (row.gateDate) row.gateDate = normalizeDate(row.gateDate);
@@ -934,25 +981,6 @@ function parseDelimited(text) {
     parsed.push(row);
   }
   return parsed;
-}
-
-function splitCSVLine(line, delim) {
-  if (delim === '\t') return line.split('\t');
-  const result = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') {
-      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
-      else inQ = !inQ;
-    } else if (c === ',' && !inQ) {
-      result.push(cur); cur = '';
-    } else {
-      cur += c;
-    }
-  }
-  result.push(cur);
-  return result;
 }
 
 function normalizeDate(d) {
