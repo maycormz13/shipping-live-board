@@ -32,8 +32,36 @@
     --grid-line: rgba(0,200,255,0.06);
     --glow: 0 0 20px rgba(0,200,255,0.18);
   }
+
+  body.light-mode {
+    --bg: #f4f7fb;
+    --surface: #ffffff;
+    --surface2: #eef3f8;
+    --border: #d7e1ec;
+    --border-bright: #b9c8d8;
+    --accent: #0077aa;
+    --accent2: #0099cc;
+    --text: #243447;
+    --text-dim: #61748a;
+    --text-bright: #102030;
+    --late: #d93025;
+    --late-bg: rgba(217,48,37,0.10);
+    --upcoming: #b8860b;
+    --upcoming-bg: rgba(184,134,11,0.10);
+    --complete: #1a8f4c;
+    --complete-bg: rgba(26,143,76,0.10);
+    --high: #d35400;
+    --high-bg: rgba(211,84,0,0.10);
+    --on-time: #0077aa;
+    --on-time-bg: rgba(0,119,170,0.08);
+    --pkg: #6a3fd6;
+    --pkg-bg: rgba(106,63,214,0.10);
+    --grid-line: rgba(0,0,0,0.04);
+    --glow: 0 0 20px rgba(0,119,170,0.12);
+  }
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background-color .2s, color .2s; }
   body::before {
     content: '';
     position: fixed;
@@ -43,8 +71,7 @@
     pointer-events: none;
     z-index: 0;
   }
- 
-  /* ── header ── */
+
   header {
     position: relative; z-index: 10;
     display: flex; align-items: center; justify-content: space-between;
@@ -52,30 +79,28 @@
     background: linear-gradient(90deg, #0a1520 0%, #0e1d2e 100%);
     border-bottom: 1px solid var(--border-bright);
     box-shadow: 0 2px 30px rgba(0,200,255,0.08);
+    transition: background-color .2s, border-color .2s;
   }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width:32px;height:32px;display:grid;place-items:center;background:linear-gradient(135deg,#00c8ff22,#0085b322);border:1px solid var(--accent2);border-radius:6px; }
   .logo-icon svg { width:18px;height:18px;fill:var(--accent); }
   .logo-text { font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:2px;color:var(--text-bright);text-transform:uppercase; }
   .logo-text span { color:var(--accent); }
-  .header-right { display:flex;align-items:center;gap:20px; }
+  .header-right { display:flex;align-items:center;gap:12px; }
   #clock { font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--accent);letter-spacing:1px; }
   .status-badge { display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:1.5px;color:var(--complete);text-transform:uppercase; }
   .status-dot { width:7px;height:7px;border-radius:50%;background:var(--complete);box-shadow:0 0 8px var(--complete);animation:pulse 2s ease infinite; }
   @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
- 
-  /* ── tabs ── */
+
   .tabs { position:relative;z-index:10;display:flex;gap:0;padding:0 28px;background:var(--surface);border-bottom:1px solid var(--border); }
   .tab { padding:13px 22px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;user-select:none; }
   .tab:hover { color:var(--text); }
   .tab.active { color:var(--accent);border-bottom-color:var(--accent); }
   .tab-count { display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--accent2);color:#fff;font-size:10px;font-family:'Exo 2',sans-serif;margin-left:6px;font-weight:700; }
- 
-  /* ── panels ── */
+
   .panel { display:none;position:relative;z-index:5; }
   .panel.active { display:block; }
- 
-  /* ── toolbar ── */
+
   .toolbar { display:flex;align-items:center;gap:10px;padding:14px 28px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap; }
   .btn { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border:1px solid;transition:all .15s; }
   .btn-primary { background:linear-gradient(135deg,#00c8ff22,#0056a822);border-color:var(--accent2);color:var(--accent); }
@@ -88,15 +113,14 @@
   .btn-ghost:hover { color:var(--text);border-color:var(--accent2); }
   .btn-success { background:rgba(34,224,122,0.1);border-color:rgba(34,224,122,0.4);color:var(--complete); }
   .btn-success:hover { background:rgba(34,224,122,0.18); }
- 
+
   .search-wrap { flex:1;max-width:280px;position:relative; }
   .search-wrap input { width:100%;padding:7px 12px 7px 34px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'Exo 2',sans-serif;outline:none;transition:border-color .15s; }
   .search-wrap input:focus { border-color:var(--accent2); }
   .search-wrap svg { position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;fill:var(--text-dim);pointer-events:none; }
   .filter-select { padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:'Exo 2',sans-serif;outline:none;cursor:pointer; }
   .filter-select:focus { border-color:var(--accent2); }
- 
-  /* ── stats ── */
+
   .stats-strip { display:flex;gap:1px;padding:14px 28px 14px;background:var(--surface);border-bottom:1px solid var(--border); }
   .stat-card { flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;display:flex;flex-direction:column;gap:2px;margin:0 3px;position:relative;overflow:hidden; }
   .stat-card::before { content:'';position:absolute;top:0;left:0;right:0;height:2px; }
@@ -110,8 +134,7 @@
   .stat-card.late .stat-value { color:var(--late); }
   .stat-card.upcoming .stat-value { color:var(--upcoming); }
   .stat-card.complete .stat-value { color:var(--complete); }
- 
-  /* ── table ── */
+
   .table-wrap { padding:16px 28px 32px;overflow-x:auto; }
   table { width:100%;border-collapse:separate;border-spacing:0;font-size:13px; }
   thead th { position:sticky;top:0;padding:10px 12px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);background:var(--surface2);border-bottom:1px solid var(--border-bright);white-space:nowrap;user-select:none;cursor:pointer; }
@@ -122,8 +145,7 @@
   tbody tr.row-late td { background:var(--late-bg); }
   tbody tr.row-upcoming td { background:var(--upcoming-bg); }
   tbody tr.row-complete td { background:var(--complete-bg); }
- 
-  /* ── badges ── */
+
   .badge { display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap; }
   .badge-late { background:var(--late-bg);color:var(--late);border:1px solid rgba(255,59,59,0.3); }
   .badge-upcoming { background:var(--upcoming-bg);color:var(--upcoming);border:1px solid rgba(245,197,24,0.3); }
@@ -134,8 +156,7 @@
   .pri-high { color:var(--high);font-weight:600; }
   .pri-medium { color:var(--upcoming);font-weight:600; }
   .pri-low { color:var(--text-dim); }
- 
-  /* ── modal base ── */
+
   .modal-backdrop { display:none;position:fixed;inset:0;background:rgba(5,10,20,0.85);z-index:100;backdrop-filter:blur(4px);align-items:center;justify-content:center; }
   .modal-backdrop.open { display:flex; }
   .modal { width:860px;max-width:95vw;max-height:90vh;background:var(--surface2);border:1px solid var(--border-bright);border-radius:12px;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.7),0 0 40px rgba(0,200,255,0.08);overflow:hidden; }
@@ -146,8 +167,7 @@
   .modal-close:hover { border-color:var(--late);color:var(--late); }
   .modal-body { padding:24px;overflow-y:auto;flex:1; }
   .modal-footer { display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 24px;background:var(--surface);border-top:1px solid var(--border); }
- 
-  /* ── add/edit form ── */
+
   .form-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:16px; }
   .form-group { display:flex;flex-direction:column;gap:6px; }
   .form-group.span2 { grid-column:span 2; }
@@ -155,8 +175,7 @@
   label { font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim); }
   .form-input { padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text-bright);font-size:13px;font-family:'Exo 2',sans-serif;outline:none;transition:border-color .15s; }
   .form-input:focus { border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,200,255,0.1); }
- 
-  /* ── IMPORT MODAL ── */
+
   .import-zone {
     border: 2px dashed var(--border-bright);
     border-radius: 10px;
@@ -174,20 +193,19 @@
   .import-zone-sub { font-size:12px;color:var(--text-dim); }
   .import-formats { display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px; }
   .format-tag { padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;letter-spacing:1px;border:1px solid var(--border-bright);color:var(--text-dim); }
- 
+
   .import-paste-wrap { margin-bottom:20px; }
   .import-paste-wrap label { display:block;margin-bottom:8px; }
   .import-paste { width:100%;height:120px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:'Share Tech Mono',monospace;padding:10px;resize:vertical;outline:none;transition:border-color .15s; }
   .import-paste:focus { border-color:var(--accent); }
   .import-paste::placeholder { color:var(--text-dim); }
- 
+
   .import-separator { display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:12px;margin:16px 0; }
   .import-separator::before, .import-separator::after { content:'';flex:1;height:1px;background:var(--border); }
- 
+
   .import-info { background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.15);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--text-dim);margin-bottom:16px; }
   .import-info strong { color:var(--accent); }
- 
-  /* preview table */
+
   .preview-wrap { overflow-x:auto;max-height:340px;border:1px solid var(--border);border-radius:8px; }
   .preview-table { width:100%;border-collapse:collapse;font-size:12px; }
   .preview-table th { padding:8px 10px;background:var(--surface);border-bottom:1px solid var(--border-bright);font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);white-space:nowrap;position:sticky;top:0; }
@@ -199,16 +217,14 @@
   .skip-btn { background:none;border:none;cursor:pointer;color:var(--text-dim);font-size:14px;line-height:1;transition:color .1s; }
   .skip-btn:hover { color:var(--late); }
   .preview-table tr.skip .skip-btn { color:var(--complete); }
- 
-  /* mode tabs inside import */
+
   .import-mode-tabs { display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid var(--border); }
   .import-mode-tab { padding:9px 16px;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s; }
   .import-mode-tab.active { color:var(--pkg);border-bottom-color:var(--pkg); }
   .import-mode-tab:hover { color:var(--text); }
   .import-mode-panel { display:none; }
   .import-mode-panel.active { display:block; }
- 
-  /* ── live board ── */
+
   .liveboard-header { padding:20px 28px 10px;display:flex;align-items:center;justify-content:space-between; }
   .liveboard-title { font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text-bright); }
   .liveboard-title span { color:var(--accent); }
@@ -228,8 +244,7 @@
   .live-carrier { font-size:12px;color:var(--text-dim);margin-bottom:10px; }
   .live-card-bottom { display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:10px;border-top:1px solid var(--border); }
   .live-trailer { font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text-dim); }
- 
-  /* ── door board ── */
+
   .door-section-label { padding:14px 28px 8px;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim); }
   .door-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:0 28px 24px; }
   .door-slot { background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;position:relative;min-height:110px;transition:box-shadow .15s; }
@@ -240,8 +255,7 @@
   .door-number span { font-family:'Share Tech Mono',monospace;font-size:24px;color:var(--accent);display:block;line-height:1; }
   .door-slot.pkg-door .door-number span { color:var(--pkg); }
   .door-empty { display:flex;flex-direction:column;align-items:center;justify-content:center;height:50px;gap:6px;color:var(--text-dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:0.4; }
- 
-  /* ── context menu ── */
+
   .ctx-menu { display:none;position:fixed;background:var(--surface2);border:1px solid var(--border-bright);border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.6);z-index:200;min-width:160px;overflow:hidden; }
   .ctx-menu.open { display:block; }
   .ctx-item { padding:9px 16px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text);transition:background .1s; }
@@ -249,26 +263,24 @@
   .ctx-item.danger { color:var(--late); }
   .ctx-item.danger:hover { background:var(--late-bg); }
   .ctx-divider { height:1px;background:var(--border);margin:4px 0; }
- 
-  /* ── scrollbar ── */
+
   ::-webkit-scrollbar { width:6px;height:6px; }
   ::-webkit-scrollbar-track { background:var(--bg); }
   ::-webkit-scrollbar-thumb { background:var(--border-bright);border-radius:3px; }
   ::-webkit-scrollbar-thumb:hover { background:var(--accent2); }
- 
-  /* ── toast ── */
+
   .toast-wrap { position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px; }
   .toast { background:var(--surface2);border:1px solid var(--border-bright);border-radius:8px;padding:10px 16px;font-size:13px;color:var(--text-bright);box-shadow:0 4px 24px rgba(0,0,0,0.5);display:flex;align-items:center;gap:8px;animation:slide-in .2s ease; }
   .toast.success { border-left:3px solid var(--complete); }
   .toast.error { border-left:3px solid var(--late); }
   .toast.info { border-left:3px solid var(--accent); }
   @keyframes slide-in { from{transform:translateX(20px);opacity:0} to{transform:none;opacity:1} }
- 
+
   .sort-arrow { margin-left:4px;opacity:0.5; }
   .empty-state { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:60px 20px;color:var(--text-dim); }
   .empty-state svg { width:40px;height:40px;fill:var(--border-bright); }
   .empty-state p { font-size:14px;letter-spacing:1px; }
- 
+
   @media (max-width:700px) {
     .form-grid { grid-template-columns:1fr 1fr; }
     .form-group.span3 { grid-column:span 2; }
@@ -280,25 +292,25 @@
 </style>
 </head>
 <body>
- 
+
 <header>
   <div class="logo">
     <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zm0 6h18v4H3zm0 6h18v4H3z"/></svg></div>
     <div class="logo-text"> MGR &mdash; <span>Integrated Load System</span></div>
   </div>
   <div class="header-right">
+    <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-btn">Light Mode</button>
     <div id="clock"></div>
     <div class="status-badge"><div class="status-dot"></div>System Live</div>
   </div>
 </header>
- 
+
 <div class="tabs">
   <div class="tab active" data-tab="tracker">Load Tracker <span class="tab-count" id="tc-count">0</span></div>
   <div class="tab" data-tab="liveboard">Live Board</div>
   <div class="tab" data-tab="doorboard">Door Board</div>
 </div>
- 
-<!-- ══ LOAD TRACKER ══ -->
+
 <div class="panel active" id="panel-tracker">
   <div class="stats-strip">
     <div class="stat-card total"><div class="stat-label">Total Loads</div><div class="stat-value" id="stat-total">0</div></div>
@@ -307,7 +319,7 @@
     <div class="stat-card on-time"><div class="stat-label">On Time</div><div class="stat-value" id="stat-ontime">0</div></div>
     <div class="stat-card complete"><div class="stat-label">Complete</div><div class="stat-value" id="stat-complete">0</div></div>
   </div>
- 
+
   <div class="toolbar">
     <button class="btn btn-primary" onclick="openModal()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"/></svg>
@@ -322,8 +334,8 @@
       Export CSV
     </button>
     <button class="btn btn-danger" onclick="clearAllLoads()">
-       <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"> <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13l-1.13-1.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/> </svg>
-       Clear All
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13l-1.13-1.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      Clear All
     </button>
     <div class="search-wrap">
       <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -342,8 +354,9 @@
       <option value="Medium">Medium</option>
       <option value="Low">Low</option>
     </select>
+    <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-btn-2">Light Mode</button>
   </div>
- 
+
   <div class="table-wrap">
     <table id="load-table">
       <thead>
@@ -380,8 +393,7 @@
     </div>
   </div>
 </div>
- 
-<!-- ══ LIVE BOARD ══ -->
+
 <div class="panel" id="panel-liveboard">
   <div class="liveboard-header">
     <div class="liveboard-title">Live <span>Shipping</span> Board</div>
@@ -393,8 +405,7 @@
     <p>No active loads to display</p>
   </div>
 </div>
- 
-<!-- ══ DOOR BOARD ══ -->
+
 <div class="panel" id="panel-doorboard">
   <div class="liveboard-header">
     <div class="liveboard-title">Dock <span>Door</span> Board</div>
@@ -404,8 +415,7 @@
   <div class="door-section-label">🚛 Shipping — Doors 4–21</div>
   <div class="door-grid" id="door-grid-ship"></div>
 </div>
- 
-<!-- ══ ADD/EDIT MODAL ══ -->
+
 <div class="modal-backdrop" id="modal">
   <div class="modal">
     <div class="modal-header">
@@ -453,8 +463,7 @@
     </div>
   </div>
 </div>
- 
-<!-- ══ IMPORT MODAL ══ -->
+
 <div class="modal-backdrop" id="import-modal">
   <div class="modal modal-wide">
     <div class="modal-header">
@@ -462,13 +471,12 @@
       <button class="modal-close" onclick="closeImport()">✕</button>
     </div>
     <div class="modal-body">
- 
+
       <div class="import-mode-tabs">
         <div class="import-mode-tab active" data-mode="file" onclick="switchImportMode('file')">Upload File</div>
         <div class="import-mode-tab" data-mode="paste" onclick="switchImportMode('paste')">Paste Data</div>
       </div>
- 
-      <!-- FILE MODE -->
+
       <div class="import-mode-panel active" id="import-file-panel">
         <div class="import-info">
           <strong>Supported formats:</strong> CSV, TSV, Excel (.xlsx/.xls), or any tab/comma-separated file.<br>
@@ -488,8 +496,7 @@
           </div>
         </div>
       </div>
- 
-      <!-- PASTE MODE -->
+
       <div class="import-mode-panel" id="import-paste-panel">
         <div class="import-info">
           Paste tab-separated or comma-separated rows directly from Excel, a spreadsheet, or any text source.<br>
@@ -504,8 +511,7 @@
           Parse &amp; Preview
         </button>
       </div>
- 
-      <!-- PREVIEW -->
+
       <div id="import-preview" style="display:none">
         <div class="import-separator">Preview</div>
         <p class="preview-count" id="preview-count"></p>
@@ -523,7 +529,7 @@
           </table>
         </div>
       </div>
- 
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeImport()">Cancel</button>
@@ -534,21 +540,17 @@
     </div>
   </div>
 </div>
- 
-<!-- ══ CONTEXT MENU ══ -->
+
 <div class="ctx-menu" id="ctx-menu">
   <div class="ctx-item" onclick="ctxEdit()">✎ &nbsp;Edit Load</div>
   <div class="ctx-item" onclick="ctxDuplicate()">⧉ &nbsp;Duplicate</div>
   <div class="ctx-divider"></div>
   <div class="ctx-item danger" onclick="ctxDelete()">🗑 &nbsp;Delete</div>
 </div>
- 
+
 <div class="toast-wrap" id="toasts"></div>
- 
+
 <script>
-// ══════════════════════════════════════════════════
-//  DATA
-// ══════════════════════════════════════════════════
 const STORE_KEY = 'MGR_LOADS_v3';
 let loads = [];
 let editingId = null;
@@ -596,9 +598,22 @@ function clearAllLoads() {
   toast('All loads cleared.', 'success');
 }
 
-// ══════════════════════════════════════════════════
-//  ALERT LOGIC
-// ══════════════════════════════════════════════════
+function toggleTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-btn').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+  document.getElementById('theme-btn-2').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+}
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'light') document.body.classList.add('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  document.getElementById('theme-btn').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+  document.getElementById('theme-btn-2').textContent = isLight ? 'Dark Mode' : 'Light Mode';
+}
+
 function calcAlert(row) {
   if (row.status === 'Completed') return 'COMPLETE';
   const g = parseGate(row.gateDate, row.gateTime);
@@ -626,15 +641,6 @@ function parseGate(d, t) {
   } catch(e) { return null; }
 }
 
-function timeDiff(row) {
-  const g = parseGate(row.gateDate, row.gateTime);
-  if (!g) return null;
-  return Math.round((g - Date.now()) / 60000);
-}
-
-// ══════════════════════════════════════════════════
-//  RENDER
-// ══════════════════════════════════════════════════
 function render() {
   renderTable();
   renderLiveBoard();
@@ -647,7 +653,6 @@ function filteredSorted() {
   const q = (document.getElementById('search-input')?.value || '').toLowerCase();
   const alertF = document.getElementById('filter-alert')?.value || '';
   const prioF = document.getElementById('filter-priority')?.value || '';
-
   let rows = loads.map(r => ({ ...r, _alert: calcAlert(r) }));
   if (q) rows = rows.filter(r =>
     [r.trip,r.order,r.po,r.carrier,r.customer,r.door,r.trailer,r.loader,r.transNotes,r.guardNotes,r.shipNotes,r.status,r.priority]
@@ -655,7 +660,6 @@ function filteredSorted() {
   );
   if (alertF) rows = rows.filter(r => r._alert === alertF);
   if (prioF) rows = rows.filter(r => r.priority === prioF);
-
   rows.sort((a,b) => {
     let va = a[sortField] ?? '', vb = b[sortField] ?? '';
     if (typeof va === 'number') return (va-vb)*sortDir;
@@ -670,7 +674,6 @@ function renderTable() {
   const rows = filteredSorted();
   if (!rows.length) { tbody.innerHTML = ''; empty.style.display='flex'; return; }
   empty.style.display = 'none';
-
   tbody.innerHTML = rows.map(r => {
     const alert = r._alert;
     const rowCls = alert==='LATE'?'row-late':alert==='UPCOMING'?'row-upcoming':alert==='COMPLETE'?'row-complete':'';
@@ -898,9 +901,7 @@ function parseDelimited(text) {
   const tabs = (firstLine.match(/\t/g)||[]).length;
   const commas = (firstLine.match(/,/g)||[]).length;
   const delim = tabs >= commas ? '\t' : ',';
-
   const lines = text.split('\n').map(l => l.replace(/\r/g,''));
-
   let headerIdx = -1;
   let headers = [];
   for (let i = 0; i < Math.min(lines.length, 5); i++) {
@@ -909,26 +910,21 @@ function parseDelimited(text) {
     const matched = norm.filter(h => COL_MAP[h]).length;
     if (matched >= 2) { headerIdx = i; headers = norm; break; }
   }
-
   if (headerIdx === -1) {
     headerIdx = 0;
     headers = splitCSVLine(lines[0], delim).map(normalizeHeader);
   }
-
   const dataLines = lines.slice(headerIdx + 1);
   const parsed = [];
-
   for (const line of dataLines) {
     if (!line.trim()) continue;
     const cells = splitCSVLine(line, delim);
     if (cells.every(c => !c.trim())) continue;
-
     const row = {};
     headers.forEach((h, i) => {
       const field = COL_MAP[h];
       if (field) row[field] = (cells[i] || '').trim();
     });
-
     if (!row.customer && !row.carrier && !row.trip) continue;
     if (row.gateDate) row.gateDate = normalizeDate(row.gateDate);
     if (row.shipDate) row.shipDate = normalizeDate(row.shipDate);
@@ -937,7 +933,6 @@ function parseDelimited(text) {
     if (row.setTemp !== undefined) row.setTemp = row.setTemp !== '' ? Number(row.setTemp) || null : null;
     parsed.push(row);
   }
-
   return parsed;
 }
 
@@ -1030,12 +1025,10 @@ function handleFileInput(e) {
 function processFile(file) {
   const name = file.name.toLowerCase();
   const reader = new FileReader();
-
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     parseXLSX(null);
     return;
   }
-
   reader.onload = e => {
     const text = e.target.result;
     const parsed = parseDelimited(text);
@@ -1059,7 +1052,6 @@ function parsePaste() {
 function showPreview(rows, source) {
   importRows = rows;
   skipSet = new Set();
-
   const tbody = document.getElementById('preview-body');
   tbody.innerHTML = rows.map((r, i) => `
     <tr id="prev-row-${i}">
@@ -1076,13 +1068,10 @@ function showPreview(rows, source) {
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${r.transNotes||'—'}</td>
       <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.shipNotes||'—'}</td>
     </tr>`).join('');
-
   document.getElementById('preview-count').innerHTML =
     `Found <strong>${rows.length}</strong> load row${rows.length!==1?'s':''} from ${source}. Click ✕ on any row to skip it.`;
-
   document.getElementById('import-preview').style.display = 'block';
   document.getElementById('import-confirm-btn').style.display = 'inline-flex';
-  document.getElementById('import-confirm-btn').textContent = '';
   document.getElementById('import-confirm-btn').innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Import ${rows.length} Loads`;
 }
 
@@ -1132,6 +1121,7 @@ function toast(msg, type='success') {
   setTimeout(()=>el.remove(), 4000);
 }
 
+loadTheme();
 loadData();
 render();
 tick();
