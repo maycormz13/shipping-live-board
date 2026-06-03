@@ -382,7 +382,7 @@
           <th onclick="sortBy('status')">Status</th>
           <th onclick="sortBy('priority')">Priority</th>
           <th onclick="sortBy('_alert')">Alert</th>
-          <th></th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="table-body"></tbody>
@@ -700,7 +700,15 @@ function renderTable() {
       <td>${r.status||'—'}</td>
       <td class="${prioCls}">${r.priority||'—'}</td>
       <td>${alertBadgeHtml(alert)}</td>
-      <td style="text-align:right"><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="editRow('${r.id}');event.stopPropagation()">Edit</button></td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="editRow('${r.id}');event.stopPropagation()">
+          ✎ Edit
+        </button>
+        <button class="btn btn-danger" style="padding:4px 10px;font-size:11px;margin-left:6px" onclick="deleteRow('${r.id}');event.stopPropagation()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm3.46-7.12 1.41-1.41L12 11.59l1.12-1.12 1.41 1.41L13.41 13l1.12 1.12-1.41 1.41L12 14.41l-1.12 1.12-1.41-1.41L10.59 13l-1.13-1.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          Delete
+        </button>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -846,6 +854,13 @@ function saveLoad() {
 }
 
 function editRow(id) { openModal(id); }
+
+function deleteRow(id) {
+  if (!confirm('Delete this load?')) return;
+  loads = loads.filter(r => r.id !== id);
+  saveData();
+  toast('Load deleted.', 'error');
+}
 
 function showCtx(e,id) { e.preventDefault(); ctxTargetId=id; const m=document.getElementById('ctx-menu'); m.style.left=e.clientX+'px'; m.style.top=e.clientY+'px'; m.classList.add('open'); }
 function hideCtx() { document.getElementById('ctx-menu').classList.remove('open'); }
