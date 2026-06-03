@@ -557,7 +557,7 @@ let sortField = 'gateTime';
 let sortDir = 1;
 let importRows = [];
 let skipSet = new Set();
- 
+
 function loadData() {
   try {
     const raw = localStorage.getItem(STORE_KEY);
@@ -565,21 +565,37 @@ function loadData() {
   } catch(e) {}
   loads = [];
 }
- 
+
 function saveData() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(loads)); } catch(e) {}
   render();
 }
- 
+
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
- 
+
+function exportCSVBackup(prefix = 'backup') {
+  const headers = ['Ship Date','Trip#','Order#','PO#','Carrier','CPU Check In','Phone','Customer','QTY','Gate Date','Gate Time','Door','Set Temp','Trailer','Loader/PA','Trans Notes','Guard Notes','Ship Notes','Status','Priority','Alert'];
+  const rows = loads.map(r => {
+    const alert = calcAlert(r);
+    return [r.shipDate,r.trip,r.order,r.po,r.carrier,r.cpuCheckIn,r.phone,r.customer,r.qty,r.gateDate,r.gateTime,r.door,r.setTemp,r.trailer,r.loader,r.transNotes,r.guardNotes,r.shipNotes,r.status,r.priority,alert]
+      .map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${prefix}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
 function clearAllLoads() {
-  if (!confirm('Clear all loads? This cannot be undone.')) return;
+  if (!confirm('Clear all loads? A CSV backup will download first.')) return;
+  if (loads.length) exportCSVBackup('loads_backup');
   loads = [];
   saveData();
   toast('All loads cleared.', 'success');
 }
- 
+
 // ══════════════════════════════════════════════════
 //  ALERT LOGIC
 // ══════════════════════════════════════════════════
@@ -592,7 +608,7 @@ function calcAlert(row) {
   if (diff <= 60) return 'UPCOMING';
   return 'ON TIME';
 }
- 
+
 function parseGate(d, t) {
   if (!d || !t) return null;
   let ds = d.trim();
@@ -609,13 +625,13 @@ function parseGate(d, t) {
     return isNaN(dt) ? null : dt;
   } catch(e) { return null; }
 }
- 
+
 function timeDiff(row) {
   const g = parseGate(row.gateDate, row.gateTime);
   if (!g) return null;
   return Math.round((g - Date.now()) / 60000);
 }
- 
+
 // ══════════════════════════════════════════════════
 //  RENDER
 // ══════════════════════════════════════════════════
@@ -626,12 +642,12 @@ function render() {
   updateStats();
   updateTabCount();
 }
- 
+
 function filteredSorted() {
   const q = (document.getElementById('search-input')?.value || '').toLowerCase();
   const alertF = document.getElementById('filter-alert')?.value || '';
   const prioF = document.getElementById('filter-priority')?.value || '';
- 
+
   let rows = loads.map(r => ({ ...r, _alert: calcAlert(r) }));
   if (q) rows = rows.filter(r =>
     [r.trip,r.order,r.po,r.carrier,r.customer,r.door,r.trailer,r.loader,r.transNotes,r.guardNotes,r.shipNotes,r.status,r.priority]
@@ -639,7 +655,7 @@ function filteredSorted() {
   );
   if (alertF) rows = rows.filter(r => r._alert === alertF);
   if (prioF) rows = rows.filter(r => r.priority === prioF);
- 
+
   rows.sort((a,b) => {
     let va = a[sortField] ?? '', vb = b[sortField] ?? '';
     if (typeof va === 'number') return (va-vb)*sortDir;
@@ -647,14 +663,14 @@ function filteredSorted() {
   });
   return rows;
 }
- 
+
 function renderTable() {
   const tbody = document.getElementById('table-body');
   const empty = document.getElementById('empty-tracker');
   const rows = filteredSorted();
   if (!rows.length) { tbody.innerHTML = ''; empty.style.display='flex'; return; }
   empty.style.display = 'none';
- 
+
   tbody.innerHTML = rows.map(r => {
     const alert = r._alert;
     const rowCls = alert==='LATE'?'row-late':alert==='UPCOMING'?'row-upcoming':alert==='COMPLETE'?'row-complete':'';
@@ -685,15 +701,15 @@ function renderTable() {
     </tr>`;
   }).join('');
 }
- 
+
 function esc(s) { return s.replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
- 
+
 function alertBadgeHtml(alert) {
   if (!alert) return '—';
   const cls = {LATE:'badge-late',UPCOMING:'badge-upcoming','ON TIME':'badge-ontime',COMPLETE:'badge-complete'}[alert]||'badge-ontime';
   return `<span class="badge ${cls}"><span class="badge-dot"></span>${alert}</span>`;
 }
- 
+
 function updateStats() {
   const all = loads.map(r => calcAlert(r));
   document.getElementById('stat-total').textContent = loads.length;
@@ -702,11 +718,11 @@ function updateStats() {
   document.getElementById('stat-ontime').textContent = all.filter(a=>a==='ON TIME').length;
   document.getElementById('stat-complete').textContent = all.filter(a=>a==='COMPLETE').length;
 }
- 
+
 function updateTabCount() {
   document.getElementById('tc-count').textContent = loads.length;
 }
- 
+
 function renderLiveBoard() {
   const grid = document.getElementById('live-grid');
   const empty = document.getElementById('empty-live');
@@ -730,7 +746,7 @@ function renderLiveBoard() {
     </div>`;
   }).join('');
 }
- 
+
 function renderDoorBoard() {
   const pkgGrid = document.getElementById('door-grid-pkg');
   const shipGrid = document.getElementById('door-grid-ship');
@@ -746,7 +762,7 @@ function renderDoorBoard() {
   const extraNamed = named.filter(d => !['1','2','3'].includes(d));
   shipGrid.innerHTML = [...numbered, ...extraNamed].map(d => doorSlotHtml(d, byDoor[d], false)).join('');
 }
- 
+
 function doorSlotHtml(doorId, entries, isPkg) {
   const pkgCls = isPkg ? 'pkg-door' : '';
   if (!entries || !entries.length) {
@@ -772,14 +788,14 @@ function doorSlotHtml(doorId, entries, isPkg) {
     </div>`;
   }).join('');
 }
- 
+
 function sortBy(field) {
   sortField = (sortField===field) ? (sortDir*=-1, field) : (sortDir=1, field);
   renderTable();
 }
- 
+
 const FIELDS = ['shipDate','trip','order','po','carrier','cpuCheckIn','phone','customer','qty','gateDate','gateTime','door','setTemp','trailer','loader','status','priority','transNotes','guardNotes','shipNotes'];
- 
+
 function openModal(id) {
   editingId = id || null;
   document.getElementById('modal-title').textContent = id ? 'Edit Load' : 'Add Load';
@@ -794,7 +810,7 @@ function openModal(id) {
   }
   document.getElementById('modal').classList.add('open');
 }
- 
+
 function closeModal() { document.getElementById('modal').classList.remove('open'); editingId=null; }
 
 function clearForm() {
@@ -807,7 +823,7 @@ function clearForm() {
   document.getElementById('f-gateDate').value = today;
   toast('Form cleared.', 'info');
 }
- 
+
 function saveLoad() {
   const data = {};
   FIELDS.forEach(f => { const el=document.getElementById('f-'+f); data[f]=el?el.value:''; });
@@ -825,16 +841,16 @@ function saveLoad() {
   closeModal();
   saveData();
 }
- 
+
 function editRow(id) { openModal(id); }
- 
+
 function showCtx(e,id) { e.preventDefault(); ctxTargetId=id; const m=document.getElementById('ctx-menu'); m.style.left=e.clientX+'px'; m.style.top=e.clientY+'px'; m.classList.add('open'); }
 function hideCtx() { document.getElementById('ctx-menu').classList.remove('open'); }
 function ctxEdit() { hideCtx(); editRow(ctxTargetId); }
 function ctxDuplicate() { hideCtx(); const o=loads.find(r=>r.id===ctxTargetId); if(o){loads.push({...o,id:uid()});saveData();toast('Load duplicated.','success');} }
 function ctxDelete() { hideCtx(); loads=loads.filter(r=>r.id!==ctxTargetId); saveData(); toast('Load deleted.','error'); }
 document.addEventListener('click', hideCtx);
- 
+
 function exportCSV() {
   const headers = ['Ship Date','Trip#','Order#','PO#','Carrier','CPU Check In','Phone','Customer','QTY','Gate Date','Gate Time','Door','Set Temp','Trailer','Loader/PA','Trans Notes','Guard Notes','Ship Notes','Status','Priority','Alert'];
   const rows = loads.map(r => {
@@ -849,7 +865,7 @@ function exportCSV() {
   a.click();
   toast('CSV exported.','success');
 }
- 
+
 const COL_MAP = {
   'ship date':'shipDate','ship_date':'shipDate',
   'trip#':'trip','trip':'trip','trip #':'trip',
@@ -872,19 +888,19 @@ const COL_MAP = {
   'status':'status',
   'priority':'priority',
 };
- 
+
 function normalizeHeader(h) {
   return h.toLowerCase().replace(/[^a-z0-9 #\\/]/g,'').trim();
 }
- 
+
 function parseDelimited(text) {
   const firstLine = text.split('\n')[0] || '';
   const tabs = (firstLine.match(/\t/g)||[]).length;
   const commas = (firstLine.match(/,/g)||[]).length;
   const delim = tabs >= commas ? '\t' : ',';
- 
+
   const lines = text.split('\n').map(l => l.replace(/\r/g,''));
- 
+
   let headerIdx = -1;
   let headers = [];
   for (let i = 0; i < Math.min(lines.length, 5); i++) {
@@ -893,26 +909,26 @@ function parseDelimited(text) {
     const matched = norm.filter(h => COL_MAP[h]).length;
     if (matched >= 2) { headerIdx = i; headers = norm; break; }
   }
- 
+
   if (headerIdx === -1) {
     headerIdx = 0;
     headers = splitCSVLine(lines[0], delim).map(normalizeHeader);
   }
- 
+
   const dataLines = lines.slice(headerIdx + 1);
   const parsed = [];
- 
+
   for (const line of dataLines) {
     if (!line.trim()) continue;
     const cells = splitCSVLine(line, delim);
     if (cells.every(c => !c.trim())) continue;
- 
+
     const row = {};
     headers.forEach((h, i) => {
       const field = COL_MAP[h];
       if (field) row[field] = (cells[i] || '').trim();
     });
- 
+
     if (!row.customer && !row.carrier && !row.trip) continue;
     if (row.gateDate) row.gateDate = normalizeDate(row.gateDate);
     if (row.shipDate) row.shipDate = normalizeDate(row.shipDate);
@@ -921,10 +937,10 @@ function parseDelimited(text) {
     if (row.setTemp !== undefined) row.setTemp = row.setTemp !== '' ? Number(row.setTemp) || null : null;
     parsed.push(row);
   }
- 
+
   return parsed;
 }
- 
+
 function splitCSVLine(line, delim) {
   if (delim === '\t') return line.split('\t');
   const result = [];
@@ -943,7 +959,7 @@ function splitCSVLine(line, delim) {
   result.push(cur);
   return result;
 }
- 
+
 function normalizeDate(d) {
   if (!d) return '';
   d = d.trim();
@@ -956,7 +972,7 @@ function normalizeDate(d) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
   return d;
 }
- 
+
 function normalizeTime(t) {
   if (!t) return '';
   t = t.trim();
@@ -968,12 +984,12 @@ function normalizeTime(t) {
   if (/^\d{3}$/.test(t)) return '0'+t[0]+':'+t.substring(1);
   return t;
 }
- 
+
 function parseXLSX(buffer) {
   toast('XLSX detected — for best results, save as CSV or copy-paste the data.', 'info');
   return [];
 }
- 
+
 function openImport() {
   importRows = [];
   skipSet = new Set();
@@ -984,42 +1000,42 @@ function openImport() {
   switchImportMode('file');
   document.getElementById('import-modal').classList.add('open');
 }
- 
+
 function closeImport() {
   document.getElementById('import-modal').classList.remove('open');
 }
- 
+
 function switchImportMode(mode) {
   document.querySelectorAll('.import-mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode===mode));
   document.querySelectorAll('.import-mode-panel').forEach(p => p.classList.toggle('active', p.id==='import-'+mode+'-panel'));
 }
- 
+
 function zoneDrag(e, over) {
   e.preventDefault();
   document.getElementById('import-zone').classList.toggle('dragover', over);
 }
- 
+
 function zoneDrop(e) {
   e.preventDefault();
   document.getElementById('import-zone').classList.remove('dragover');
   const file = e.dataTransfer.files[0];
   if (file) processFile(file);
 }
- 
+
 function handleFileInput(e) {
   const file = e.target.files[0];
   if (file) processFile(file);
 }
- 
+
 function processFile(file) {
   const name = file.name.toLowerCase();
   const reader = new FileReader();
- 
+
   if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
     parseXLSX(null);
     return;
   }
- 
+
   reader.onload = e => {
     const text = e.target.result;
     const parsed = parseDelimited(text);
@@ -1031,7 +1047,7 @@ function processFile(file) {
   };
   reader.readAsText(file);
 }
- 
+
 function parsePaste() {
   const text = document.getElementById('paste-input').value.trim();
   if (!text) { toast('Please paste some data first.', 'error'); return; }
@@ -1039,11 +1055,11 @@ function parsePaste() {
   if (!parsed.length) { toast('Could not parse any load rows. Check format.', 'error'); return; }
   showPreview(parsed, 'pasted data');
 }
- 
+
 function showPreview(rows, source) {
   importRows = rows;
   skipSet = new Set();
- 
+
   const tbody = document.getElementById('preview-body');
   tbody.innerHTML = rows.map((r, i) => `
     <tr id="prev-row-${i}">
@@ -1060,16 +1076,16 @@ function showPreview(rows, source) {
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis">${r.transNotes||'—'}</td>
       <td style="max-width:100px;overflow:hidden;text-overflow:ellipsis">${r.shipNotes||'—'}</td>
     </tr>`).join('');
- 
+
   document.getElementById('preview-count').innerHTML =
     `Found <strong>${rows.length}</strong> load row${rows.length!==1?'s':''} from ${source}. Click ✕ on any row to skip it.`;
- 
+
   document.getElementById('import-preview').style.display = 'block';
   document.getElementById('import-confirm-btn').style.display = 'inline-flex';
   document.getElementById('import-confirm-btn').textContent = '';
   document.getElementById('import-confirm-btn').innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Import ${rows.length} Loads`;
 }
- 
+
 function toggleSkip(i) {
   const row = document.getElementById('prev-row-'+i);
   if (skipSet.has(i)) { skipSet.delete(i); row.classList.remove('skip'); }
@@ -1079,7 +1095,7 @@ function toggleSkip(i) {
   document.getElementById('preview-count').innerHTML =
     `Found <strong>${importRows.length}</strong> rows — <strong>${active}</strong> selected, <strong>${skipSet.size}</strong> skipped.`;
 }
- 
+
 function confirmImport() {
   const toAdd = importRows.filter((_, i) => !skipSet.has(i)).map(r => ({id:uid(), status:'Today', priority:'', ...r}));
   if (!toAdd.length) { toast('All rows were skipped.', 'error'); return; }
@@ -1088,7 +1104,7 @@ function confirmImport() {
   closeImport();
   toast(`✓ Imported ${toAdd.length} load${toAdd.length!==1?'s':''} successfully.`, 'success');
 }
- 
+
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -1097,7 +1113,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
   });
 });
- 
+
 function tick() {
   const now = new Date();
   const str = now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -1106,7 +1122,7 @@ function tick() {
   if (el) el.textContent = str;
   if (el2) el2.textContent = now.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})+'  '+str;
 }
- 
+
 function toast(msg, type='success') {
   const wrap = document.getElementById('toasts');
   const el = document.createElement('div');
@@ -1115,7 +1131,7 @@ function toast(msg, type='success') {
   wrap.appendChild(el);
   setTimeout(()=>el.remove(), 4000);
 }
- 
+
 loadData();
 render();
 tick();
